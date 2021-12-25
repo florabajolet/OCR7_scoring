@@ -129,9 +129,61 @@ def IDR(df, col):
     return result
 
 
+def spearman_correlation(df):
+    """
+    Plot a Spearman correlation matrix of the dataframe.
+    If NaN still in dataframe, will drop them to perform the correlations.
+    """
+    n_rows_initial = df.shape[0]
+    print(f"Initial number of rows: {n_rows_initial}.\n-----")
+    print(f"Number of NaN values:\n{df.isnull().sum()}.\n-----")
+    df_clean=df.dropna()
+    print(f"Removed {n_rows_initial - df_clean.shape[0]} lines droping NaN.")
+    print(f"Number of rows after droped NaN: {df_clean.shape[0]}.")
+    
+    cols = df_clean.columns
+    spearman_rho = pd.DataFrame(rho, index=cols, columns=cols)
+    spearman_p = pd.DataFrame(p, index=cols, columns=cols)
+
+    mask_tri = np.zeros_like(spearman_rho)
+    mask_tri[np.triu_indices_from(mask_tri)] = True
+
+    fig, ax = plt.subplots(figsize=(9, 9))
+
+    sns.heatmap(spearman_rho, mask=mask_tri, annot=True);
+
 
 
 # CPA PLOT FUNCTIONS
+
+def cpa_custom(df, n_comp):
+    """
+    Drop NaN if any, scale data with Standard Scaler of scikit-learn and fit CPA.
+    Return CPA object of scikit-learn and transformed data.
+    """
+    # Print info and drop NaN
+    n_rows_initial = df.shape[0]
+    print(f"Initial number of rows: {n_rows_initial}.\n-----")
+    print(f"Number of NaN values:\n{df.isnull().sum()}.\n-----")
+    df_clean=df.dropna()
+    print(f"Removed {n_rows_initial - df_clean.shape[0]} lines droping NaN.")
+    print(f"Number of rows after droped NaN: {df_clean.shape[0]}.")
+    
+    # Input data
+    X = df_clean.values
+    names = df_clean.index
+    features = df_clean.columns
+    
+    # Scaling data
+    std_scale = StandardScaler().fit(X)
+    X_scaled = std_scale.transform(X)
+    
+    # Main axes calculation
+    cpa = PCA(n_components=n_comp)
+    cpa.fit(X_scaled)
+    
+    return cpa, X_scaled
+
 
 def display_eigenvalues(cpa, annotate=True):
     """
@@ -164,11 +216,13 @@ def display_eigenvalues(cpa, annotate=True):
     
     #fig.savefig("eigenvalues_plot.png", bbox_inches="tight", dpi=150)
 
-def display_circles(pcs, n_comp, pca, axis_ranks, labels=None, label_rotation=0, lims=None):
+def display_circles(pca, n_comp, axis_ranks, labels=None, label_rotation=0, lims=None):
     """
     Display the correlation circle of a CPA.
     """
     sns.set_theme(style="whitegrid")
+    
+    pcs = pca.components_
     
     for d1, d2 in axis_ranks: # On affiche les 3 premiers plans factoriels, donc les 6 premières composantes
         if d2 < n_comp:

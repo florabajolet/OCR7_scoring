@@ -9,6 +9,8 @@ import statsmodels.api as sm
 from statsmodels.formula.api import ols
 from sklearn import decomposition
 from sklearn import preprocessing
+from sklearn.decomposition import PCA
+from sklearn.preprocessing import StandardScaler
 import math
 import string
 import random
@@ -141,6 +143,7 @@ def spearman_correlation(df):
     print(f"Removed {n_rows_initial - df_clean.shape[0]} lines droping NaN.")
     print(f"Number of rows after droped NaN: {df_clean.shape[0]}.")
     
+    rho, p = stats.spearmanr(df_clean)
     cols = df_clean.columns
     spearman_rho = pd.DataFrame(rho, index=cols, columns=cols)
     spearman_p = pd.DataFrame(p, index=cols, columns=cols)

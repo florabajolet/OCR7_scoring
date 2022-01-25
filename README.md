@@ -13,6 +13,7 @@ An API and technical as well as users documentation complete this project.
 
 ## What you need
 csv data files can be downloaded at: https://www.kaggle.com/c/home-credit-default-risk/data
+
 Librairies:
 - Python 3.8.8
 - Matplotlib 3.4.2
@@ -35,3 +36,8 @@ This project include:
 * A dashboard implementing model and user-friendly interface for interpretation
 * A Flask API (TO DO)
 * Technical and user documentations (TO DO)
+
+The exploratory analysis and feature aggregation are partly taken from the following Kaggle kernels:
+- https://www.kaggle.com/willkoehrsen/start-here-a-gentle-introduction
+- https://www.kaggle.com/gpreda/home-credit-default-risk-extensive-eda
+- https://www.kaggle.com/jsaguiar/lightgbm-with-simple-features

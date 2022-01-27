@@ -12,30 +12,30 @@ from sklearn.preprocessing import StandardScaler
 
 
 ## PREPROCESSING ##
-def cat_to_num(bureau, bureau_balance, previous_app, pos_cash, cat_to_num):
+def cat_to_num(bureau, bureau_balance, previous_app, pos_cash, cat_to_num_dict):
     """
     Replace categorical features by ordinal or numerical ones using provided dictionnary for mapping.
     Return processed dataframes.
 
     bureau, bureau_balance, previous_app, pos_cash: dataframes.
-    cat_to_num: dict of nested dict with numerical values to replace categorical classes.
+    cat_to_num_dict: dict of nested dict with numerical values to replace categorical classes.
     """
-    bureau_all_num = bureau.copy()
-    bureau_balance_all_num = bureau_balance.copy()
-    previous_app_all_num = previous_app.copy()
-    pos_cash_all_num = pos_cash.copy()
+    bureau = bureau.copy()
+    bureau_balance = bureau_balance.copy()
+    previous_app = previous_app.copy()
+    pos_cash = pos_cash.copy()
 
     # Bureau
     features = ["CREDIT_ACTIVE", "CREDIT_CURRENCY", "CREDIT_TYPE"]
-    scores = [cat_to_num["categ_b_credit_active"],
-            cat_to_num["categ_b_currency"], 
-            cat_to_num["score_credit_type"]]
+    scores = [cat_to_num_dict["categ_b_credit_active"],
+            cat_to_num_dict["categ_b_currency"], 
+            cat_to_num_dict["score_credit_type"]]
 
     for feature, score in zip(features, scores):
-        bureau_all_num[feature] = bureau_all_num[feature].map(score)
+        bureau[feature] = bureau[feature].map(score)
     
     # Bureau balance
-    bureau_balance_all_num["STATUS"] = bureau_balance_all_num["STATUS"].map(cat_to_num["categ_bb_status"])
+    bureau_balance["STATUS"] = bureau_balance["STATUS"].map(cat_to_num_dict["categ_bb_status"])
 
     #Previous app
     features = ["NAME_CONTRACT_TYPE", 
@@ -49,35 +49,35 @@ def cat_to_num(bureau, bureau_balance, previous_app, pos_cash, cat_to_num):
                 "CHANNEL_TYPE", 
                 "NAME_SELLER_INDUSTRY", 
                 "NAME_GOODS_CATEGORY"]
-    scores = [cat_to_num["categ_prev_name_contract_type"], 
-            cat_to_num["categ_prev_name_contract_status"],
-            cat_to_num["categ_prev_name_yield_group"], 
-            cat_to_num["categ_prev_name_product_type"], 
-            cat_to_num["categ_prev_flag_last_appl_per_contract"],
-            cat_to_num["score_code_reject_reason"],
-            cat_to_num["score_name_cash_loan_purpose"],
-            cat_to_num["score_product_combination"],
-            cat_to_num["score_channel_type"],
-            cat_to_num["score_name_seller_industry"],
-            cat_to_num["score_name_goods_category"]]
+    scores = [cat_to_num_dict["categ_prev_name_contract_type"], 
+            cat_to_num_dict["categ_prev_name_contract_status"],
+            cat_to_num_dict["categ_prev_name_yield_group"], 
+            cat_to_num_dict["categ_prev_name_product_type"], 
+            cat_to_num_dict["categ_prev_flag_last_appl_per_contract"],
+            cat_to_num_dict["score_code_reject_reason"],
+            cat_to_num_dict["score_name_cash_loan_purpose"],
+            cat_to_num_dict["score_product_combination"],
+            cat_to_num_dict["score_channel_type"],
+            cat_to_num_dict["score_name_seller_industry"],
+            cat_to_num_dict["score_name_goods_category"]]
 
     # Replace classes by ordinal or numerical value
     for feature, score in zip(features, scores):
-        previous_app_all_num[feature] = previous_app_all_num[feature].map(score)
+        previous_app[feature] = previous_app[feature].map(score)
 
     # Drop categorical columns with little influence on default risk
-    previous_app_all_num.drop(["WEEKDAY_APPR_PROCESS_START", "NAME_PAYMENT_TYPE", 
+    previous_app.drop(["WEEKDAY_APPR_PROCESS_START", "NAME_PAYMENT_TYPE", 
                                 "NAME_TYPE_SUITE", "NAME_CLIENT_TYPE", "NAME_PORTFOLIO"], 
                                 axis=1, inplace=True)
 
     # Pos_cash
-    pos_cash_all_num["NAME_CONTRACT_STATUS"] = pos_cash_all_num["NAME_CONTRACT_STATUS"] \
-                                                .map(cat_to_num["categ_pos_name_contract_status"])
+    pos_cash["NAME_CONTRACT_STATUS"] = pos_cash["NAME_CONTRACT_STATUS"] \
+                                                .map(cat_to_num_dict["categ_pos_name_contract_status"])
 
-    return bureau_all_num, bureau_balance_all_num, previous_app_all_num, pos_cash_all_num
+    return bureau, bureau_balance, previous_app, pos_cash
 
 
-def application_train_agg(df, verbose=False):
+def application_agg(df, verbose=False):
     """
     Create new features on the application dataframe and replace DAYS_EMPLOYED by NaN if needed.
     Return dataframe with new features.
@@ -125,19 +125,15 @@ def bureau_and_balance_agg(df_bureau, df_bureau_balance, verbose=False):
     
     # Bureau and bureau_balance numeric features
     num_aggregations = {
-        'DAYS_CREDIT': ['min', 'max', 'mean', 'var'],
+        'DAYS_CREDIT': ['min', 'max', 'mean'],
         'DAYS_CREDIT_ENDDATE': ['max', 'mean'],
         'CREDIT_DAY_OVERDUE': ['max'],
-        'AMT_CREDIT_MAX_OVERDUE': ['mean'],
         'AMT_CREDIT_SUM': ['max'],
         'AMT_CREDIT_SUM_DEBT': ['mean'],
         'AMT_CREDIT_SUM_OVERDUE': ['mean'],
-        'AMT_CREDIT_SUM_LIMIT': ['mean', 'sum'],
-        'AMT_ANNUITY': ['max', 'mean'],
+        'AMT_CREDIT_SUM_LIMIT': ['sum'],
         'CNT_CREDIT_PROLONG': ['sum'],
-        'MONTHS_BALANCE_MIN': ['min'],
-        'MONTHS_BALANCE_MAX': ['max'],
-        'MONTHS_BALANCE_SIZE': ['mean', 'sum']
+        'MONTHS_BALANCE_SIZE': ['sum']
     }
     
     # Categorical (ordinal) aggregations
@@ -153,8 +149,6 @@ def bureau_and_balance_agg(df_bureau, df_bureau_balance, verbose=False):
     bureau_agg.columns = pd.Index(['BUREAU_' + e[0] + "_" + e[1].upper() for e in bureau_agg.columns.tolist()])
 
     return bureau_agg
-
-
 
 
 def previous_applications_agg(df, verbose=False):
@@ -180,7 +174,7 @@ def previous_applications_agg(df, verbose=False):
         'AMT_ANNUITY': ['min', 'max', 'mean'],
         'AMT_APPLICATION': ['min'],
         'AMT_CREDIT': ['min'],
-        'APP_CREDIT_PERC': ['min', 'max', 'mean', 'var'],
+        'APP_CREDIT_PERC': ['min', 'max', 'mean'],
         'AMT_DOWN_PAYMENT': ['min','mean'],
         'AMT_GOODS_PRICE': ['min'],
         'HOUR_APPR_PROCESS_START': ['min', 'max', 'mean'],
@@ -266,6 +260,26 @@ def installments_agg(df, verbose=False):
     df_install_agg.columns = pd.Index(['INSTAL_' + e[0] + "_" + e[1].upper() for e in df_install_agg.columns.tolist()])
 
     return df_install_agg
+
+def main_agg(application, bureau, bureau_balance, previous_app, installments, pos_cash):
+    """
+    Create new features with internal aggregation of dataframe and join results into a single df.
+    Return aggregated dataframe.
+    """
+    # Feature engineering
+    application_fe = application_agg(application)
+    bureau_and_balance_fe = bureau_and_balance_agg(bureau, bureau_balance)
+    previous_app_fe = previous_applications_agg(previous_app)
+    pos_cash_fe = pos_cash_agg(pos_cash)
+    installments_fe = installments_agg(installments)
+
+    # Joining all datasets
+    application_fe = application_fe.join(bureau_and_balance_fe, how='left', on='SK_ID_CURR')
+    application_fe = application_fe.join(previous_app_fe, how='left', on='SK_ID_CURR')
+    application_fe = application_fe.join(pos_cash_fe, how='left', on='SK_ID_CURR')
+    application_fe = application_fe.join(installments_fe, how='left', on='SK_ID_CURR')
+
+    return application_fe
 
 
 ## MODELING ##

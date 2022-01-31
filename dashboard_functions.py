@@ -4,14 +4,24 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import seaborn as sns
 from scipy import stats
+from sklearn.linear_model import LogisticRegression
+from bokeh.models import HoverTool, ColumnDataSource
+from bokeh.plotting import figure
+from bokeh.models.annotations import Label
+import plotly.graph_objects as go
+import pickle
+import shap
+shap.initjs()
 import time
 import gc
 import os
 import sys
 from sklearn.preprocessing import StandardScaler
 
+#----------------------------------------------------------------------------------#
+#                                 PREPROCESSING                                    #
+#----------------------------------------------------------------------------------#
 
-## PREPROCESSING ##
 def cat_to_num(bureau, bureau_balance, previous_app, pos_cash, cat_to_num_dict):
     """
     Replace categorical features by ordinal or numerical ones using provided dictionnary for mapping.
@@ -281,8 +291,242 @@ def main_agg(application, bureau, bureau_balance, previous_app, installments, po
 
     return application_fe
 
+def preprocessing_main(application, bureau, bureau_balance, installments, previous_app, pos_cash):
+    """ 
+    All preprocessing of data, including aggregation, scaling of numerical variables and
+    transformation of categorical variable.
+    Return 3 dataframes: the aggregated data, the aggregated data with a second line for display,
+    the transformed client's data to feed the model.
+    """
+    # Get the pickled dictionnary and preprocessing
+    pickle_cat_to_num = open("cat_to_num.pickle", "rb")
+    cat_to_num_dict = pickle.load(pickle_cat_to_num)
+    pickle_preprocessor = open("scalers_preprocessing.pickle", "rb")
+    scalers_preprocessing = pickle.load(pickle_preprocessor)
 
-## MODELING ##
+    ## Transform categorical variables to numerical ##
+    bureau_all_num, bureau_balance_all_num, previous_app_all_num, pos_cash_all_num = cat_to_num(bureau, 
+                                                                                                bureau_balance, 
+                                                                                                previous_app, 
+                                                                                                pos_cash, 
+                                                                                                cat_to_num_dict)
+
+    ## Feature engineering and aggregation ##
+    data_client = main_agg(application, bureau_all_num, bureau_balance_all_num, 
+                            previous_app_all_num, installments, pos_cash_all_num)
+    # drop unecessary columns
+    features_to_drop = ['SK_ID_CURR',
+                        'AMT_GOODS_PRICE',
+                        'APARTMENTS_AVG',
+                        'BASEMENTAREA_AVG',
+                        'LIVINGAPARTMENTS_AVG',
+                        'LIVINGAREA_AVG',
+                        'NONLIVINGAPARTMENTS_AVG',
+                        'NONLIVINGAREA_AVG',
+                        'APARTMENTS_MODE',
+                        'BASEMENTAREA_MODE',
+                        'YEARS_BEGINEXPLUATATION_MODE',
+                        'YEARS_BUILD_MODE',
+                        'COMMONAREA_MODE',
+                        'ELEVATORS_MODE',
+                        'ENTRANCES_MODE',
+                        'FLOORSMAX_MODE',
+                        'FLOORSMIN_MODE',
+                        'LANDAREA_MODE',
+                        'LIVINGAPARTMENTS_MODE',
+                        'LIVINGAREA_MODE',
+                        'NONLIVINGAPARTMENTS_MODE',
+                        'NONLIVINGAREA_MODE',
+                        'APARTMENTS_MEDI',
+                        'BASEMENTAREA_MEDI',
+                        'YEARS_BEGINEXPLUATATION_MEDI',
+                        'YEARS_BUILD_MEDI',
+                        'COMMONAREA_MEDI',
+                        'ELEVATORS_MEDI',
+                        'ENTRANCES_MEDI',
+                        'FLOORSMAX_MEDI',
+                        'FLOORSMIN_MEDI',
+                        'LANDAREA_MEDI',
+                        'LIVINGAPARTMENTS_MEDI',
+                        'LIVINGAREA_MEDI',
+                        'NONLIVINGAPARTMENTS_MEDI',
+                        'NONLIVINGAREA_MEDI',
+                        'FONDKAPREMONT_MODE',
+                        'HOUSETYPE_MODE',
+                        'TOTALAREA_MODE',
+                        'WALLSMATERIAL_MODE',
+                        'EMERGENCYSTATE_MODE',
+                        'COMMONAREA_AVG',
+                        'ELEVATORS_AVG',
+                        'ENTRANCES_AVG',
+                        'FLOORSMAX_AVG',
+                        'FLOORSMIN_AVG',
+                        'LANDAREA_AVG',
+                        'YEARS_BEGINEXPLUATATION_AVG',
+                        'YEARS_BUILD_AVG',
+                        'NAME_TYPE_SUITE',
+                        'OWN_CAR_AGE',
+                        'CNT_FAM_MEMBERS']
+
+    data_client.drop(features_to_drop, axis=1, inplace=True)
+
+    # Re-order columns
+    data_client = data_client[['CNT_CHILDREN',
+                                'AMT_INCOME_TOTAL',
+                                'AMT_CREDIT',
+                                'AMT_ANNUITY',
+                                'REGION_POPULATION_RELATIVE',
+                                'DAYS_BIRTH',
+                                'DAYS_EMPLOYED',
+                                'DAYS_REGISTRATION',
+                                'DAYS_ID_PUBLISH',
+                                'REGION_RATING_CLIENT',
+                                'REGION_RATING_CLIENT_W_CITY',
+                                'HOUR_APPR_PROCESS_START',
+                                'REG_REGION_NOT_LIVE_REGION',
+                                'REG_REGION_NOT_WORK_REGION',
+                                'LIVE_REGION_NOT_WORK_REGION',
+                                'REG_CITY_NOT_LIVE_CITY',
+                                'REG_CITY_NOT_WORK_CITY',
+                                'LIVE_CITY_NOT_WORK_CITY',
+                                'EXT_SOURCE_1',
+                                'EXT_SOURCE_2',
+                                'EXT_SOURCE_3',
+                                'OBS_30_CNT_SOCIAL_CIRCLE',
+                                'DEF_30_CNT_SOCIAL_CIRCLE',
+                                'OBS_60_CNT_SOCIAL_CIRCLE',
+                                'DEF_60_CNT_SOCIAL_CIRCLE',
+                                'DAYS_LAST_PHONE_CHANGE',
+                                'AMT_REQ_CREDIT_BUREAU_HOUR',
+                                'AMT_REQ_CREDIT_BUREAU_DAY',
+                                'AMT_REQ_CREDIT_BUREAU_WEEK',
+                                'AMT_REQ_CREDIT_BUREAU_MON',
+                                'AMT_REQ_CREDIT_BUREAU_QRT',
+                                'AMT_REQ_CREDIT_BUREAU_YEAR',
+                                'DAYS_EMPLOYED_PERC',
+                                'INCOME_CREDIT_PERC',
+                                'INCOME_PER_PERSON',
+                                'ANNUITY_INCOME_PERC',
+                                'PAYMENT_RATE',
+                                'BUREAU_DAYS_CREDIT_MIN',
+                                'BUREAU_DAYS_CREDIT_MAX',
+                                'BUREAU_DAYS_CREDIT_MEAN',
+                                'BUREAU_DAYS_CREDIT_ENDDATE_MAX',
+                                'BUREAU_DAYS_CREDIT_ENDDATE_MEAN',
+                                'BUREAU_CREDIT_DAY_OVERDUE_MAX',
+                                'BUREAU_AMT_CREDIT_SUM_MAX',
+                                'BUREAU_AMT_CREDIT_SUM_DEBT_MEAN',
+                                'BUREAU_AMT_CREDIT_SUM_OVERDUE_MEAN',
+                                'BUREAU_AMT_CREDIT_SUM_LIMIT_SUM',
+                                'BUREAU_CNT_CREDIT_PROLONG_SUM',
+                                'BUREAU_MONTHS_BALANCE_SIZE_SUM',
+                                'BUREAU_CREDIT_ACTIVE_MEAN',
+                                'BUREAU_CREDIT_ACTIVE_SUM',
+                                'BUREAU_CREDIT_CURRENCY_MEAN',
+                                'BUREAU_CREDIT_TYPE_MEAN',
+                                'BUREAU_CREDIT_TYPE_MAX',
+                                'PREV_AMT_ANNUITY_MIN',
+                                'PREV_AMT_ANNUITY_MAX',
+                                'PREV_AMT_ANNUITY_MEAN',
+                                'PREV_AMT_APPLICATION_MIN',
+                                'PREV_AMT_CREDIT_MIN',
+                                'PREV_APP_CREDIT_PERC_MIN',
+                                'PREV_APP_CREDIT_PERC_MAX',
+                                'PREV_APP_CREDIT_PERC_MEAN',
+                                'PREV_AMT_DOWN_PAYMENT_MIN',
+                                'PREV_AMT_DOWN_PAYMENT_MEAN',
+                                'PREV_AMT_GOODS_PRICE_MIN',
+                                'PREV_HOUR_APPR_PROCESS_START_MIN',
+                                'PREV_HOUR_APPR_PROCESS_START_MAX',
+                                'PREV_HOUR_APPR_PROCESS_START_MEAN',
+                                'PREV_DAYS_DECISION_MIN',
+                                'PREV_DAYS_DECISION_MAX',
+                                'PREV_CNT_PAYMENT_MEAN',
+                                'PREV_FLAG_LAST_APPL_PER_CONTRACT_MEAN',
+                                'PREV_NAME_CASH_LOAN_PURPOSE_MEAN',
+                                'PREV_NAME_CONTRACT_STATUS_MAX',
+                                'PREV_CODE_REJECT_REASON_MEAN',
+                                'PREV_NAME_YIELD_GROUP_MEAN',
+                                'PREV_PRODUCT_COMBINATION_MEAN',
+                                'POS_MONTHS_BALANCE_MAX',
+                                'POS_MONTHS_BALANCE_MEAN',
+                                'POS_SK_DPD_MAX',
+                                'POS_SK_DPD_DEF_MAX',
+                                'POS_NAME_CONTRACT_STATUS_MIN',
+                                'POS_NAME_CONTRACT_STATUS_MAX',
+                                'INSTAL_NUM_INSTALMENT_VERSION_NUNIQUE',
+                                'INSTAL_DBD_MAX',
+                                'INSTAL_DBD_MEAN',
+                                'INSTAL_DBD_SUM',
+                                'INSTAL_PAYMENT_PERC_MAX',
+                                'INSTAL_PAYMENT_DIFF_MEAN',
+                                'INSTAL_AMT_INSTALMENT_MAX',
+                                'INSTAL_AMT_PAYMENT_MIN',
+                                'INSTAL_DAYS_ENTRY_PAYMENT_MAX',
+                                'NAME_CONTRACT_TYPE',
+                                'CODE_GENDER',
+                                'FLAG_OWN_CAR',
+                                'FLAG_OWN_REALTY',
+                                'NAME_INCOME_TYPE',
+                                'NAME_EDUCATION_TYPE',
+                                'NAME_FAMILY_STATUS',
+                                'NAME_HOUSING_TYPE',
+                                'OCCUPATION_TYPE',
+                                'WEEKDAY_APPR_PROCESS_START',
+                                'ORGANIZATION_TYPE',
+                                'FLAG_MOBIL',
+                                'FLAG_EMP_PHONE',
+                                'FLAG_WORK_PHONE',
+                                'FLAG_CONT_MOBILE',
+                                'FLAG_PHONE',
+                                'FLAG_EMAIL',
+                                'FLAG_DOCUMENT_2',
+                                'FLAG_DOCUMENT_3',
+                                'FLAG_DOCUMENT_4',
+                                'FLAG_DOCUMENT_5',
+                                'FLAG_DOCUMENT_6',
+                                'FLAG_DOCUMENT_7',
+                                'FLAG_DOCUMENT_8',
+                                'FLAG_DOCUMENT_9',
+                                'FLAG_DOCUMENT_10',
+                                'FLAG_DOCUMENT_11',
+                                'FLAG_DOCUMENT_12',
+                                'FLAG_DOCUMENT_13',
+                                'FLAG_DOCUMENT_14',
+                                'FLAG_DOCUMENT_15',
+                                'FLAG_DOCUMENT_16',
+                                'FLAG_DOCUMENT_17',
+                                'FLAG_DOCUMENT_18',
+                                'FLAG_DOCUMENT_19',
+                                'FLAG_DOCUMENT_20',
+                                'FLAG_DOCUMENT_21']]
+
+    # Add a line for display
+    display_data_client = data_client.append(pd.Series(dtype="int64"), ignore_index=True)
+
+    ## Transform features ##
+    data_client_transformed = scalers_preprocessing.transform(data_client)
+    data_client_transformed = pd.DataFrame(data_client_transformed)
+    data_client_transformed_json = data_client_transformed.to_json(orient="split")
+
+    return data_client, display_data_client, data_client_transformed, data_client_transformed_json
+
+
+#----------------------------------------------------------------------------------#
+#                                 MODELING                                         #
+#----------------------------------------------------------------------------------#
+
+def get_prediction(data_client_transformed):
+    """
+    Predict default risk, return % of risk of default.
+    """
+    pickle_model = open("best_model_lr.pickle", "rb")
+    best_model_lr = pickle.load(pickle_model)
+
+    prediction = best_model_lr.predict_proba(data_client_transformed)
+    prediction_default=  prediction[0][1]*100
+
+    return prediction_default
 
 
 def format_shap_values(shap_values, feature_names):
@@ -314,3 +558,86 @@ def format_shap_values(shap_values, feature_names):
     most_important_features = most_important_features[::-1]
 
     return shap_explained, most_important_features
+
+def explain_features(data_client_transformed):
+    """
+    Load pickeled explainer and names of transformed feature, compute the shap values.
+    """
+    pickle_explainer = open("kernel_explainer.pickle", "rb")
+    kernel_explainer = pickle.load(pickle_explainer)
+    pickle_feature_names = open("feature_names.pickle", "rb")
+    feature_names = pickle.load(pickle_feature_names)
+
+    explained_sample = kernel_explainer.shap_values(data_client_transformed.loc[0, :])
+    # Format shap values
+    shap_explained, most_important_features = format_shap_values(explained_sample, feature_names)
+
+    return shap_explained, most_important_features
+
+
+#----------------------------------------------------------------------------------#
+#                                     FIGURES                                      #
+#----------------------------------------------------------------------------------#
+
+def plot_gauge(prediction_default):
+    fig_gauge = go.Figure(go.Indicator(
+    domain = {'x': [0, 1], 'y': [0, 1]},
+    value = prediction_default,
+    mode = "gauge+number",
+    title = {'text': "Risk of default (%)"},
+    gauge = {'axis': {'range': [None, 100],
+                    'tick0': 0,
+                    'dtick':10},
+            'bar': {'color': 'cornflowerblue',
+                    'thickness': 0.3,
+                    'line': {'color': 'black'}},
+            'steps' : [{'range': [0, 30], 'color': "green"},
+                        {'range': [31, 50], 'color': "orange"},
+                        {'range': [51, 100], 'color': "red"}]}
+            ))
+
+    fig_gauge.update_layout(width=400, 
+                            height=300,
+                            margin= {'l': 30, 'r': 40, 'b': 10, 't':10})
+    
+    return fig_gauge
+
+def plot_important_features(shap_explained, most_important_features):
+
+    explained_plot = figure(y_range=most_important_features, title="Most important data in the algorithm decision")
+
+    source = ColumnDataSource(data=shap_explained)
+    bars = explained_plot.hbar(y="features", left="left", right="right", height=0.5, color="color", 
+                                hover_line_color="black", hover_line_width=2, source=source)
+
+    explained_plot.xaxis.axis_label = "Impact on model output"
+    explained_plot.yaxis.axis_label = "Client's informations"
+    explained_plot.add_tools(HoverTool(tooltips=[("Importance", "@shap_values")], 
+                                renderers = [bars]))
+    return explained_plot
+
+def plot_feature_distrib(feature_distrib, client_line, hist_source, data_client_value, max_histogram):
+    distrib = figure(title=f"Client value for {feature_distrib} \ncompared to other clients", 
+                    plot_width=400, plot_height=500)
+    qr = distrib.quad(top="hist", bottom=0, line_color="white", left="edges_left", right="edges_right",
+        fill_color="navy", hover_fill_color="orange", alpha=0.5, hover_alpha=1, source=hist_source)
+
+    distrib.line(x=client_line["x"], y=client_line["y"], line_color="orange", line_width=2, line_dash="dashed")
+
+    label_client = Label(text="Value for client", x=data_client_value, y=max_histogram, text_color="orange",
+                        x_offset=-10, y_offset=10)
+    hover_tools = HoverTool(tooltips=[("Between:", "@edges_left"), ("and:", "@edges_right"), ("Count:", "@hist")], 
+                        renderers = [qr])
+
+    distrib.xaxis.axis_label = feature_distrib
+    distrib.y_range.start = 0
+    distrib.y_range.range_padding = 0.2
+    distrib.yaxis.axis_label = "Number of clients"
+    distrib.grid.grid_line_color="grey"
+    distrib.xgrid.grid_line_color=None
+    distrib.ygrid.grid_line_alpha=0.5
+
+    distrib.add_tools(hover_tools)
+    distrib.add_layout(label_client)
+
+    return distrib

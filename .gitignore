@@ -1,6 +1,7 @@
 *.csv
 *.xls
 *.xlsx
+*.json
 Kaggle*
 /__pycache__
 /.ipynb_checkpoints

@@ -6,3 +6,7 @@ Kaggle*
 /__pycache__
 /.ipynb_checkpoints
 /mlflow_example
+/data
+/json
+dashboard_examples.py
+P7_develop.ipynb

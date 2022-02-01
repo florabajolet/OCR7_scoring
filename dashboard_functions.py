@@ -299,9 +299,9 @@ def preprocessing_main(application, bureau, bureau_balance, installments, previo
     the transformed client's data to feed the model.
     """
     # Get the pickled dictionnary and preprocessing
-    pickle_cat_to_num = open("cat_to_num.pickle", "rb")
+    pickle_cat_to_num = open("pkl/cat_to_num.pickle", "rb")
     cat_to_num_dict = pickle.load(pickle_cat_to_num)
-    pickle_preprocessor = open("scalers_preprocessing.pickle", "rb")
+    pickle_preprocessor = open("pkl/scalers_preprocessing.pickle", "rb")
     scalers_preprocessing = pickle.load(pickle_preprocessor)
 
     ## Transform categorical variables to numerical ##
@@ -520,7 +520,7 @@ def get_prediction(data_client_transformed):
     """
     Predict default risk, return % of risk of default.
     """
-    pickle_model = open("best_model_lr.pickle", "rb")
+    pickle_model = open("pkl/best_model_lr.pickle", "rb")
     best_model_lr = pickle.load(pickle_model)
 
     prediction = best_model_lr.predict_proba(data_client_transformed)
@@ -563,9 +563,9 @@ def explain_features(data_client_transformed):
     """
     Load pickeled explainer and names of transformed feature, compute the shap values.
     """
-    pickle_explainer = open("kernel_explainer.pickle", "rb")
+    pickle_explainer = open("pkl/kernel_explainer.pickle", "rb")
     kernel_explainer = pickle.load(pickle_explainer)
-    pickle_feature_names = open("feature_names.pickle", "rb")
+    pickle_feature_names = open("pkl/feature_names.pickle", "rb")
     feature_names = pickle.load(pickle_feature_names)
 
     explained_sample = kernel_explainer.shap_values(data_client_transformed.loc[0, :])

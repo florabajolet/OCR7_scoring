@@ -18,7 +18,6 @@ import shap
 #import mlflow
 from dashboard_functions import *
 from mlflow_api import *
-import pickle
 import time
 import sys
 import os
@@ -39,7 +38,7 @@ st.header("Upload client's data")
 
 # Get the pickled preprocessor, model, explainer
 
-pickle_all_clients_data = open("all_clients_data.pickle", "rb")
+pickle_all_clients_data = open("pkl/all_clients_data.pickle", "rb")
 all_clients_data = pickle.load(pickle_all_clients_data)
 
 # Load data from client
@@ -102,6 +101,8 @@ if uploaded_file:
         # Predict
         prediction_default = get_prediction(data_client_transformed)
 
+        test_pred = get_prediction_api(data_client_transformed_json)
+
         # Explain features
         shap_explained, most_important_features = explain_features(data_client_transformed)
 
@@ -130,6 +131,8 @@ if uploaded_file:
                         to **analyse closely** the data to make your decision.")
         else:
             st.write(f"We recommand to **reject** client's application to loan.")
+        
+        st.write(f"Test API prediction: {test_pred}")
         
         st.caption(f"Below 30% of default risk, we recommand to accept client application.\
                     Above 50% of default risk, we recommand to reject client application. \
@@ -183,7 +186,3 @@ if uploaded_file:
         # Make figure
         distrib = plot_feature_distrib(feature_distrib, client_line, hist_source, data_client_value, max_histogram)
         st.bokeh_chart(distrib)
-
-
-        test = get_prediction_api(data_client_transformed_json)
-        st.write(test)

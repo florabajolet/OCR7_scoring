@@ -1,6 +1,4 @@
 *.csv
-*.xls
-*.xlsx
 *.json
 Kaggle*
 /__pycache__
@@ -10,3 +8,4 @@ Kaggle*
 /json
 dashboard_examples.py
 P7_develop.ipynb
+cost_function.xlsx

@@ -1,0 +1,12 @@
+flavors:
+  python_function:
+    cloudpickle_version: 1.6.0
+    env: conda.yaml
+    loader_module: mlflow.pyfunc.model
+    python_model: python_model.pkl
+    python_version: 3.8.8
+model_uuid: f2878f4e14fb44cc9965714bcb415cad
+signature:
+  inputs: '[{"type": "tensor", "tensor-spec": {"dtype": "float64", "shape": [-1, 229]}}]'
+  outputs: '[{"type": "long"}]'
+utc_time_created: '2022-02-01 18:11:27.017967'

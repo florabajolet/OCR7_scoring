@@ -61,6 +61,21 @@ if uploaded_file:
 
     # Get client ID
     client_id = application.loc[0, "SK_ID_CURR"]
+    gender = application.loc[0, "CODE_GENDER"]
+    family_status = application.loc[0, "NAME_FAMILY_STATUS"]
+    loan_type = application.loc[0, "NAME_CONTRACT_TYPE"]
+    income_type = application.loc[0, "NAME_INCOME_TYPE"]
+    education = application.loc[0, "NAME_EDUCATION_TYPE"]
+    occupation_type = application.loc[0, "OCCUPATION_TYPE"]
+    credit = str(round(application.loc[0, "AMT_CREDIT"])) + " $"
+    annuity = str(round(application.loc[0, "AMT_ANNUITY"])) + " $"
+    days_birth = application.loc[0, "DAYS_BIRTH"]
+    days_employed = application.loc[0, "DAYS_EMPLOYED"]
+    fam_members = int(application.loc[0, "CNT_FAM_MEMBERS"])
+
+    work = income_type + ", " + occupation_type
+    age = -int(round(days_birth/365))
+    years_work = -int(round(days_employed/365))
 
     st.success(f"✅ Client's data loaded.")
 
@@ -92,6 +107,32 @@ if uploaded_file:
     if st.checkbox(f"Show prepared data for client #{client_id}."):
         st.dataframe(display_data_client)
     
+    income_per_person = str(round(data_client.loc[0, "INCOME_PER_PERSON"])) + " $"
+    
+
+    #----------------------------------------------------------------------------------#
+    #                                   SIDEBAR                                        #
+    #----------------------------------------------------------------------------------#
+    
+    st.sidebar.header(f"Your client")
+
+    st.sidebar.write("**Gender:** ", gender)
+    st.sidebar.write("**Family status:** ", family_status)
+    st.sidebar.write("**Loan type:** ", loan_type)
+    st.sidebar.write("**Professional situation:** ", work)
+    st.sidebar.write("**Education:** ", education)
+
+    st.sidebar.write("""---""")
+    col1, col2 = st.sidebar.columns(2)
+    col1.metric(label="Household members", value=fam_members)
+    col2.metric(label="Age", value=age)
+    col3, col4 = st.sidebar.columns(2)
+    col3.metric(label="Years worked", value=years_work)
+    col4.metric(label="Income per person", value=income_per_person)
+    col5, col6 = st.sidebar.columns(2)
+    col5.metric(label="Credit", value=credit)
+    col6.metric(label="Annuity", value=annuity)
+
     #----------------------------------------------------------------------------------#
     #                           PREDICT, EXPLAIN FEATURES                              #
     #----------------------------------------------------------------------------------#
@@ -99,9 +140,9 @@ if uploaded_file:
     with st.spinner(f"AI at work..."):
 
         # Predict
-        prediction_default = get_prediction(data_client_transformed)
+        #prediction_default = get_prediction(data_client_transformed)
 
-        test_pred = get_prediction_api(data_client_transformed_json)
+        prediction_default = get_prediction_api(data_client_transformed_json)
 
         # Explain features
         shap_explained, most_important_features = explain_features(data_client_transformed)
@@ -109,7 +150,6 @@ if uploaded_file:
         #### DISTRIBUTION PLOTS ####
         # Default feature
         num_features = list(data_client.select_dtypes(include=["float64", "int64"]).columns)
-
 
     #----------------------------------------------------------------------------------#
     #                               DISPLAY RESULTS                                    #
@@ -132,7 +172,7 @@ if uploaded_file:
         else:
             st.write(f"We recommand to **reject** client's application to loan.")
         
-        st.write(f"Test API prediction: {test_pred}")
+        #st.write(f"Test API prediction: {test_pred}")
         
         st.caption(f"Below 30% of default risk, we recommand to accept client application.\
                     Above 50% of default risk, we recommand to reject client application. \

@@ -28,13 +28,14 @@ Librairies:
 - Plotly 5.3.1
 - Shap 0.40
 - Streamlit 1.4.0
+- MLflow 1.23.1
 
 ## Files
 This project include:
-* An exploratory data analysis notebook
-* A modeling notebook
-* A dashboard implementing model and user-friendly interface for interpretation
-* A Flask API (TO DO)
+* An exploratory data analysis notebook (P7_scoring_EDA.ipynb)
+* A modeling notebook (P7_scoring_modeling.ipynb)
+* A dashboard implementing model and user-friendly interface for interpretation (dashboard.py and dashboard_functions.py)
+* A MLflow API and corresponding model directory (mlflow_api.py and mlflow_pyfunc directory). You can also generate the directory from the last part of the modeling notbook.
 * Technical and user documentations (TO DO)
 
 The exploratory analysis and feature aggregation are partly taken from the following Kaggle kernels:

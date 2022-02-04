@@ -17,6 +17,7 @@ import gc
 import os
 import sys
 from sklearn.preprocessing import StandardScaler
+import streamlit as st
 
 #----------------------------------------------------------------------------------#
 #                                 PREPROCESSING                                    #
@@ -511,23 +512,25 @@ def preprocessing_main(application, bureau, bureau_balance, installments, previo
 
     return data_client, display_data_client, data_client_transformed, data_client_transformed_json
 
+def transform_data(data_client):
+    """ 
+    Scale numerical features and transform categorical features for data 
+    coming from clients database.
+    """
+
+    pickle_preprocessor = open("pkl/scalers_preprocessing.pickle", "rb")
+    scalers_preprocessing = pickle.load(pickle_preprocessor)
+
+    #data_client = pd.DataFrame(data_client).T
+    data_client_transformed = scalers_preprocessing.transform(data_client)
+    data_client_transformed = pd.DataFrame(data_client_transformed)
+    data_client_transformed_json = data_client_transformed.to_json(orient="split")
+
+    return data_client_transformed, data_client_transformed_json
 
 #----------------------------------------------------------------------------------#
 #                                 MODELING                                         #
 #----------------------------------------------------------------------------------#
-
-def get_prediction(data_client_transformed):
-    """
-    Predict default risk, return % of risk of default.
-    """
-    pickle_model = open("pkl/best_model_lr.pickle", "rb")
-    best_model_lr = pickle.load(pickle_model)
-
-    prediction = best_model_lr.predict_proba(data_client_transformed)
-    prediction_default=  prediction[0][1]*100
-
-    return prediction_default
-
 
 def format_shap_values(shap_values, feature_names):
     """
@@ -559,6 +562,7 @@ def format_shap_values(shap_values, feature_names):
 
     return shap_explained, most_important_features
 
+
 def explain_features(data_client_transformed):
     """
     Load pickeled explainer and names of transformed feature, compute the shap values.
@@ -578,6 +582,7 @@ def explain_features(data_client_transformed):
 #----------------------------------------------------------------------------------#
 #                                     FIGURES                                      #
 #----------------------------------------------------------------------------------#
+
 
 def plot_gauge(prediction_default):
     fig_gauge = go.Figure(go.Indicator(
@@ -601,6 +606,7 @@ def plot_gauge(prediction_default):
                             margin= {'l': 30, 'r': 40, 'b': 10, 't':10})
     
     return fig_gauge
+
 
 def plot_important_features(shap_explained, most_important_features):
 

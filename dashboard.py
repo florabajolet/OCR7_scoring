@@ -29,91 +29,138 @@ st.set_page_config(layout="wide")
 
 st.title("Get AI advice on your client credit application")
 
-st.header("Upload client's data")
-
-
+load_type = st.radio(label="Please, choose:", options=["Load client data", "Use client database"])
 #----------------------------------------------------------------------------------#
 #                                 LOADING DATA                                     #
 #----------------------------------------------------------------------------------#
 
-# Get the pickled preprocessor, model, explainer
+# Get the pickled clients data
 
 pickle_all_clients_data = open("pkl/all_clients_data.pickle", "rb")
 all_clients_data = pickle.load(pickle_all_clients_data)
+all_clients_id = list(all_clients_data["SK_ID_CURR"])
+num_features = list(all_clients_data.select_dtypes(include=["float64", "int64"]).columns)
 
-# Load data from client
+#Define a variable to display sidebar only when data are loaded
+sidebar = "Off"
+#------------------ Load data from client
+if load_type=="Load client data":
 
-st.write(f"Excel client file must contains only one client data with sheets names: 'application', \
-        'bureau', 'bureau_balance', 'installments', 'pos_cash', 'previous_app'.")
-uploaded_file = st.file_uploader("Load client Excel file here", type=["xls", "xlsx"])
+    st.header("Upload client's data")
 
-if uploaded_file:
-    # Read database of clients
-    application = pd.read_excel(uploaded_file, sheet_name="application")
-    bureau = pd.read_excel(uploaded_file, sheet_name="bureau")
-    bureau_balance = pd.read_excel(uploaded_file, sheet_name="bureau_balance")
-    installments = pd.read_excel(uploaded_file, sheet_name="installments")
-    pos_cash = pd.read_excel(uploaded_file, sheet_name="pos_cash")
-    previous_app = pd.read_excel(uploaded_file, sheet_name="previous_app")
+    st.write(f"Excel client file must contains only one client data with sheets names: 'application', \
+            'bureau', 'bureau_balance', 'installments', 'pos_cash', 'previous_app'.")
+    uploaded_file = st.file_uploader("Load client Excel file here", type=["xls", "xlsx"])
 
-    # Drop unecessary columns
-    application.drop(["TARGET"], axis=1, inplace=True)
+    if uploaded_file:
+        # Read database of clients
+        application = pd.read_excel(uploaded_file, sheet_name="application")
+        bureau = pd.read_excel(uploaded_file, sheet_name="bureau")
+        bureau_balance = pd.read_excel(uploaded_file, sheet_name="bureau_balance")
+        installments = pd.read_excel(uploaded_file, sheet_name="installments")
+        pos_cash = pd.read_excel(uploaded_file, sheet_name="pos_cash")
+        previous_app = pd.read_excel(uploaded_file, sheet_name="previous_app")
 
-    # Get client ID
-    client_id = application.loc[0, "SK_ID_CURR"]
-    gender = application.loc[0, "CODE_GENDER"]
-    family_status = application.loc[0, "NAME_FAMILY_STATUS"]
-    loan_type = application.loc[0, "NAME_CONTRACT_TYPE"]
-    income_type = application.loc[0, "NAME_INCOME_TYPE"]
-    education = application.loc[0, "NAME_EDUCATION_TYPE"]
-    occupation_type = application.loc[0, "OCCUPATION_TYPE"]
-    credit = str(round(application.loc[0, "AMT_CREDIT"])) + " $"
-    annuity = str(round(application.loc[0, "AMT_ANNUITY"])) + " $"
-    days_birth = application.loc[0, "DAYS_BIRTH"]
-    days_employed = application.loc[0, "DAYS_EMPLOYED"]
-    fam_members = int(application.loc[0, "CNT_FAM_MEMBERS"])
+        # Drop unecessary columns
+        application.drop(["TARGET"], axis=1, inplace=True)
+
+        # Get client ID and other variables
+        client_id = application.loc[0, "SK_ID_CURR"]
+        gender = application.loc[0, "CODE_GENDER"]
+        family_status = application.loc[0, "NAME_FAMILY_STATUS"]
+        loan_type = application.loc[0, "NAME_CONTRACT_TYPE"]
+        income_type = application.loc[0, "NAME_INCOME_TYPE"]
+        education = application.loc[0, "NAME_EDUCATION_TYPE"]
+        occupation_type = application.loc[0, "OCCUPATION_TYPE"]
+        credit = str(round(application.loc[0, "AMT_CREDIT"])) + " $"
+        annuity = str(round(application.loc[0, "AMT_ANNUITY"])) + " $"
+        days_birth = application.loc[0, "DAYS_BIRTH"]
+        days_employed = application.loc[0, "DAYS_EMPLOYED"]
+        fam_members = int(application.loc[0, "CNT_FAM_MEMBERS"])
+
+        work = income_type + ", " + occupation_type
+        age = -int(round(days_birth/365))
+        years_work = -int(round(days_employed/365))
+
+        # Display sidebar on
+        sidebar = "On"
+
+        st.success(f"✅ Client's data loaded.")
+
+        # Option show data
+        if st.checkbox(f"Show input data for client #{client_id}."):
+            st.write("APPLICATION data")
+            st.dataframe(application)
+            st.write("BUREAU data")
+            st.dataframe(bureau)
+            st.write("BUREAU BALANCE data")
+            st.dataframe(bureau_balance)
+            st.write("PREVIOUS APPLICATION data")
+            st.dataframe(previous_app)
+            st.write("INSTALLEMENTS data")
+            st.dataframe(installments)
+            st.write("POS_CASH data")
+            st.dataframe(pos_cash)
+
+        #----------------------------------------------------------------------------------#
+        #                                 PREPROCESSING                                    #
+        #----------------------------------------------------------------------------------#
+
+        with st.spinner(f"Preparing data..."):
+            data_client, display_data_client, data_client_transformed, data_client_transformed_json = preprocessing_main(application, 
+                bureau, bureau_balance, installments, previous_app, pos_cash)
+
+        st.success(f"✅ Data are ready.")
+
+        if st.checkbox(f"Show prepared data for client #{client_id}."):
+            st.dataframe(display_data_client)
+    
+        income_per_person = str(round(data_client.loc[0, "INCOME_PER_PERSON"])) + " $"
+
+#------------------ Use client database    
+if load_type=="Use client database":
+
+    client_id = st.selectbox(
+            "Select your client ID in the dropdown menu.",
+            all_clients_id)
+    st.write(f"You selected client # {client_id}.")
+
+    data_client_with_id = all_clients_data[all_clients_data["SK_ID_CURR"]==client_id]
+    client_index = data_client_with_id.index[0]
+
+    gender = data_client_with_id.loc[client_index, "CODE_GENDER"]
+    family_status = data_client_with_id.loc[client_index, "NAME_FAMILY_STATUS"]
+    loan_type = data_client_with_id.loc[client_index, "NAME_CONTRACT_TYPE"]
+    income_type = data_client_with_id.loc[client_index, "NAME_INCOME_TYPE"]
+    education = data_client_with_id.loc[client_index, "NAME_EDUCATION_TYPE"]
+    occupation_type = data_client_with_id.loc[client_index, "OCCUPATION_TYPE"]
+    credit = str(round(data_client_with_id.loc[client_index, "AMT_CREDIT"])) + " $"
+    annuity = str(round(data_client_with_id.loc[client_index, "AMT_ANNUITY"])) + " $"
+    days_birth = data_client_with_id.loc[client_index, "DAYS_BIRTH"]
+    days_employed = data_client_with_id.loc[client_index, "DAYS_EMPLOYED"]
+    fam_members = int(data_client_with_id.loc[client_index, "CNT_CHILDREN"])
+    income_per_person = str(round(data_client_with_id.loc[client_index, "INCOME_PER_PERSON"])) + " $"
 
     work = income_type + ", " + occupation_type
     age = -int(round(days_birth/365))
     years_work = -int(round(days_employed/365))
 
-    st.success(f"✅ Client's data loaded.")
-
-    # Option show data
-    if st.checkbox(f"Show input data for client #{client_id}."):
-        st.write("APPLICATION data")
-        st.dataframe(application)
-        st.write("BUREAU data")
-        st.dataframe(bureau)
-        st.write("BUREAU BALANCE data")
-        st.dataframe(bureau_balance)
-        st.write("PREVIOUS APPLICATION data")
-        st.dataframe(previous_app)
-        st.write("INSTALLEMENTS data")
-        st.dataframe(installments)
-        st.write("POS_CASH data")
-        st.dataframe(pos_cash)
-
-    #----------------------------------------------------------------------------------#
-    #                                 PREPROCESSING                                    #
-    #----------------------------------------------------------------------------------#
-
-    with st.spinner(f"Preparing data..."):
-        data_client, display_data_client, data_client_transformed, data_client_transformed_json = preprocessing_main(application, 
-            bureau, bureau_balance, installments, previous_app, pos_cash)
-
-    st.success(f"✅ Data are ready.")
+    # Allow sidebar
+    sidebar = "On"
 
     if st.checkbox(f"Show prepared data for client #{client_id}."):
-        st.dataframe(display_data_client)
+        st.dataframe(data_client_with_id)
     
-    income_per_person = str(round(data_client.loc[0, "INCOME_PER_PERSON"])) + " $"
-    
+    data_client = data_client_with_id.drop("SK_ID_CURR", axis=1)
+
+    data_client_transformed, data_client_transformed_json = transform_data(data_client)
 
     #----------------------------------------------------------------------------------#
     #                                   SIDEBAR                                        #
     #----------------------------------------------------------------------------------#
-    
+
+# If data are loaded
+if sidebar=="On":
     st.sidebar.header(f"Your client")
 
     st.sidebar.write("**Gender:** ", gender)
@@ -137,19 +184,18 @@ if uploaded_file:
     #                           PREDICT, EXPLAIN FEATURES                              #
     #----------------------------------------------------------------------------------#
 
-    with st.spinner(f"AI at work..."):
 
-        # Predict
-        #prediction_default = get_prediction(data_client_transformed)
+if st.button("Get advice") or st.session_sate['advice']==True:
+
+    if 'advice' not in st.session_state:
+        st.session_state['adviuce'] = True
+
+    with st.spinner(f"AI at work..."):
 
         prediction_default = get_prediction_api(data_client_transformed_json)
 
         # Explain features
         shap_explained, most_important_features = explain_features(data_client_transformed)
-
-        #### DISTRIBUTION PLOTS ####
-        # Default feature
-        num_features = list(data_client.select_dtypes(include=["float64", "int64"]).columns)
 
     #----------------------------------------------------------------------------------#
     #                               DISPLAY RESULTS                                    #
@@ -171,8 +217,6 @@ if uploaded_file:
                         to **analyse closely** the data to make your decision.")
         else:
             st.write(f"We recommand to **reject** client's application to loan.")
-        
-        #st.write(f"Test API prediction: {test_pred}")
         
         st.caption(f"Below 30% of default risk, we recommand to accept client application.\
                     Above 50% of default risk, we recommand to reject client application. \
@@ -226,3 +270,23 @@ if uploaded_file:
         # Make figure
         distrib = plot_feature_distrib(feature_distrib, client_line, hist_source, data_client_value, max_histogram)
         st.bokeh_chart(distrib)
+
+#----------------------------------------------------------------------------------#
+#                                    BOTTOM                                        #
+#----------------------------------------------------------------------------------#
+st.write("---")
+
+col_about, col_FAQ, col_doc, col_contact = st.columns(4)
+
+with col_about:
+    st.write("About us")
+
+with col_FAQ:
+    st.write("FAQ")
+
+with col_doc:
+    st.write("Technical documentation")
+
+with col_contact:
+    st.write("Contact")
+

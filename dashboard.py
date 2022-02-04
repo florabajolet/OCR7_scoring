@@ -24,13 +24,16 @@ load_type = st.radio(label="Please, choose:", options=["Load client data", "Use 
 
 # Get the pickled clients data
 
-pickle_all_clients_data_01 = open("pkl/all_clients_data_01.pickle", "rb")
-all_clients_data_01 = pickle.load(pickle_all_clients_data_01)
-pickle_all_clients_data_02 = open("pkl/all_clients_data_02.pickle", "rb")
-all_clients_data_02 = pickle.load(pickle_all_clients_data_02)
+#pickle_all_clients_data_01 = open("pkl/all_clients_data_01.pickle", "rb")
+#all_clients_data_01 = pickle.load(pickle_all_clients_data_01)
+#pickle_all_clients_data_02 = open("pkl/all_clients_data_02.pickle", "rb")
+#all_clients_data_02 = pickle.load(pickle_all_clients_data_02)
+
+pickle_all_clients_data = open("pkl/all_clients_data.pickle", "rb")
+all_clients_data = pickle.load(pickle_all_clients_data)
 
 # Concatenate data, get IDs and features
-all_clients_data = pd.concat([all_clients_data_01, all_clients_data_02])
+#all_clients_data = pd.concat([all_clients_data_01, all_clients_data_02])
 all_clients_id = list(all_clients_data["SK_ID_CURR"])
 num_features = list(all_clients_data.select_dtypes(include=["float64", "int64"]).columns)
 

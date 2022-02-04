@@ -11,8 +11,6 @@ from dashboard_functions import *
 from mlflow_api import *
 
 
-#mlflow.set_tracking_uri(https://localhost:5000)
-
 st.set_page_config(layout="wide")
 
 st.title("Get AI advice on your client credit application")
@@ -181,7 +179,7 @@ if sidebar=="On":
     #----------------------------------------------------------------------------------#
 
 
-if st.checkbox("Get advice") & sidebar=="On":
+if st.checkbox("Get advice") and sidebar=="On":
 
     with st.spinner(f"AI at work..."):
 

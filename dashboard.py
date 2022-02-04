@@ -1,26 +1,14 @@
 import pandas as pd
 import streamlit as st
-import pandas as pd
 import numpy as np
 import pickle
-import matplotlib as mpl
-import matplotlib.pyplot as plt
-import seaborn as sns
 from bokeh.models import HoverTool,ColumnDataSource
 from bokeh.plotting import figure
 from bokeh.models.annotations import Label
 import plotly.graph_objects as go
-from sklearn.preprocessing import StandardScaler, OneHotEncoder
-from sklearn.compose import ColumnTransformer
-from sklearn.linear_model import LogisticRegression
-from imblearn.over_sampling import SMOTE
 import shap
-#import mlflow
 from dashboard_functions import *
 from mlflow_api import *
-import time
-import sys
-import os
 
 
 #mlflow.set_tracking_uri(https://localhost:5000)

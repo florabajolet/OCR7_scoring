@@ -1,12 +1,11 @@
-*.csv
 *.json
 *.docx
-Kaggle*
+*.txt
 /__pycache__
 /.ipynb_checkpoints
 /mlflow_example
 /data
 /json
-dashboard_examples*
-P7_develop*
-cost_function*
+dashboard_examples.py
+P7_develop.ipynb
+cost_function.xlsx

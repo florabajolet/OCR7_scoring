@@ -1,10 +1,5 @@
 import pandas as pd
 import numpy as np
-import matplotlib as mpl
-import matplotlib.pyplot as plt
-import seaborn as sns
-from scipy import stats
-from sklearn.linear_model import LogisticRegression
 from bokeh.models import HoverTool, ColumnDataSource
 from bokeh.plotting import figure
 from bokeh.models.annotations import Label
@@ -12,11 +7,6 @@ import plotly.graph_objects as go
 import pickle
 import shap
 shap.initjs()
-import time
-import gc
-import os
-import sys
-from sklearn.preprocessing import StandardScaler
 import streamlit as st
 
 #----------------------------------------------------------------------------------#

@@ -4,7 +4,7 @@ import json
 
 def get_prediction_api(data_client_transformed_json):
 
-    mlflow_uri = 'http://127.0.0.1:5000/invocations'
+    mlflow_uri = 'https://home-credit-advice.herokuapp.com/invocations'
 
     headers = {"Content-Type":"application/json"}
     response = requests.post(url=mlflow_uri, 

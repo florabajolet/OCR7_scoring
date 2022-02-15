@@ -36,7 +36,7 @@ This project include:
 * A modeling notebook (P7_scoring_modeling.ipynb)
 * A dashboard implementing model and user-friendly interface for interpretation (dashboard.py and dashboard_functions.py)
 * A MLflow API and corresponding model directory (mlflow_api.py and mlflow_pyfunc directory). You can also generate the directory from the last part of the modeling notbook.
-* A technical documentation.
+* A technical documentation (Documentation.pdf).
 
 The exploratory analysis and feature aggregation are partly taken from the following Kaggle kernels:
 - https://www.kaggle.com/willkoehrsen/start-here-a-gentle-introduction
@@ -45,3 +45,6 @@ The exploratory analysis and feature aggregation are partly taken from the follo
 
 ## Online app
 The deployed dashboard can be found here: https://share.streamlit.io/florabajolet/ocr7_deploy_app/main/dashboard.py
+Github repo with the necessary files for deployments are:
+* https://github.com/florabajolet/OCR7_deploy_app
+* https://github.com/florabajolet/OCR7_deploy_api

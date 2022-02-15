@@ -5,8 +5,8 @@ flavors:
     loader_module: mlflow.pyfunc.model
     python_model: python_model.pkl
     python_version: 3.8.8
-model_uuid: f2878f4e14fb44cc9965714bcb415cad
+model_uuid: 3f3547570fe4453a807883f6fef5a2b9
 signature:
   inputs: '[{"type": "tensor", "tensor-spec": {"dtype": "float64", "shape": [-1, 229]}}]'
   outputs: '[{"type": "long"}]'
-utc_time_created: '2022-02-01 18:11:27.017967'
+utc_time_created: '2022-02-15 00:08:57.782214'

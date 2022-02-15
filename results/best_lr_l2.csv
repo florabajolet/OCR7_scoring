@@ -1,2 +1,0 @@
-,model_name,mean_fit_time,mean_score_time,mean_train_accuracy,mean_train_balanced_accuracy,mean_train_roc_auc,mean_train_recall,mean_train_precision,mean_train_f1,test_score,test_roc_auc,test_accuracy,test_balanced_accuracy,test_precision,test_recall,test_f1
-0,Logistic Regression,1214.5547411441803,0.0911362648010254,0.7337939264516534,0.7338029912741668,0.8062055243709365,0.7506101039355311,0.7259558276600905,0.738076895803186,0.7577298880060734,0.6873344721182136,0.7177454320222979,0.6873344721182136,0.15853658536585366,0.6516290726817042,0.2550269740068661

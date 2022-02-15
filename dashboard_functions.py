@@ -557,12 +557,12 @@ def explain_features(data_client_transformed):
     """
     Load pickeled explainer and names of transformed feature, compute the shap values.
     """
-    pickle_explainer = open("pkl/kernel_explainer.pickle", "rb")
-    kernel_explainer = pickle.load(pickle_explainer)
+    pickle_explainer = open("pkl/linear_explainer.pickle", "rb")
+    linear_explainer = pickle.load(pickle_explainer)
     pickle_feature_names = open("pkl/feature_names.pickle", "rb")
     feature_names = pickle.load(pickle_feature_names)
 
-    explained_sample = kernel_explainer.shap_values(data_client_transformed.loc[0, :])
+    explained_sample = linear_explainer.shap_values(data_client_transformed.loc[0, :])
     # Format shap values
     shap_explained, most_important_features = format_shap_values(explained_sample, feature_names)
 

@@ -1,12 +1,11 @@
 *.json
 *.docx
 *.txt
+*.pptx
 /__pycache__
 /.ipynb_checkpoints
-/mlflow_example
 /data
 /json
 /img
-dashboard_examples.py
 P7_develop.ipynb
 cost_function.xlsx

@@ -36,9 +36,12 @@ This project include:
 * A modeling notebook (P7_scoring_modeling.ipynb)
 * A dashboard implementing model and user-friendly interface for interpretation (dashboard.py and dashboard_functions.py)
 * A MLflow API and corresponding model directory (mlflow_api.py and mlflow_pyfunc directory). You can also generate the directory from the last part of the modeling notbook.
-* Technical and user documentations (TO DO)
+* A technical documentation.
 
 The exploratory analysis and feature aggregation are partly taken from the following Kaggle kernels:
 - https://www.kaggle.com/willkoehrsen/start-here-a-gentle-introduction
 - https://www.kaggle.com/gpreda/home-credit-default-risk-extensive-eda
 - https://www.kaggle.com/jsaguiar/lightgbm-with-simple-features
+
+## Online app
+The deployed dashboard can be found here: https://share.streamlit.io/florabajolet/ocr7_deploy_app/main/dashboard.py

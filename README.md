@@ -1,5 +1,6 @@
-# OCR7_scoring
-Scoring model on the Home Credit dataset from Kaggle
+# Project 7: Build and deploy a credit scoring model
+
+*Keywords* : Supervised learning, classification, XGBoost, API, MLflow, dashboard
 
 ## Goal of the project
 This project aims at analysing various data of credit applications from the US society 'Home Credit' 
